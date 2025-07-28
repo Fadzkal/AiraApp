@@ -1,0 +1,26 @@
+name: aira
+description: Aplikasi monitoring kualitas udara dan tanaman berbasis Flutter
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  flutter_spinkit: ^5.1.0  # Untuk animasi loading di splash screen
+  provider: ^6.0.5         # Untuk state management (opsional)
+  sensors_plus: ^3.0.0     # Untuk akses sensor (opsional)
+  lottie: ^2.7.0           # Untuk animasi Lottie (opsional)
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+
+flutter:
+  uses-material-design: true
+  

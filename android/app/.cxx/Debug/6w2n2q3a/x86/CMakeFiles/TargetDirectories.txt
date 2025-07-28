@@ -1,0 +1,2 @@
+D:/komputasi bergerak/day 3/studi_kasus/android/app/.cxx/Debug/6w2n2q3a/x86/CMakeFiles/edit_cache.dir
+D:/komputasi bergerak/day 3/studi_kasus/android/app/.cxx/Debug/6w2n2q3a/x86/CMakeFiles/rebuild_cache.dir
