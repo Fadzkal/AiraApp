@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
+import 'main_screen.dart'; // Import MainScreen dari folder yang sama
 
 class SplashScreen extends StatefulWidget {
   @override
