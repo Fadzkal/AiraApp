@@ -1,6 +1,10 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/monitoring_provider.dart';
+import '../models/user_notification.dart'; // Model notifikasi dibutuhkan untuk pengecekan prioritas
+
+// Import semua layar dan widget yang dibutuhkan
 import 'monitoring_screen.dart';
 import 'notification_screen.dart';
 import 'air_quality_screen.dart';
@@ -8,6 +12,8 @@ import 'analytics_screen.dart';
 import '../widgets/voice_assistant_dialog.dart';
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({Key? key}) : super(key: key);
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }
@@ -17,209 +23,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _pulseController;
   bool _isVoiceActive = false;
-  Timer? _dataUpdateTimer;
 
-  // Sensor data
-  Map<String, dynamic> sensorData = {
-    'temperature': 24.5,
-    'humidity': 65.0,
-    'soilMoisture': 78.0,
-    'lightIntensity': 850.0,
-    'airQuality': 92.0,
-    'ph': 6.8,
-    'co2Level': 420.0,
-    'pm25': 12.0,
-    'pm10': 18.0,
-    'voc': 15.0,
-    'oxygenLevel': 20.8,
-  };
-
-  List<Map<String, dynamic>> notifications = [
-    {
-      'title': '🚨 Kualitas Udara Buruk!',
-      'message': 'PM2.5 tinggi (45 μg/m³). Aktifkan air purifier segera!',
-      'time': '2 menit lalu',
-      'type': 'critical',
-      'icon': Icons.warning,
-      'priority': 'high',
-    },
-    {
-      'title': '💨 CO2 Tinggi Terdeteksi',
-      'message':
-          'Level CO2 mencapai 850 ppm. Buka ventilasi untuk sirkulasi udara.',
-      'time': '5 menit lalu',
-      'type': 'warning',
-      'icon': Icons.air,
-      'priority': 'medium',
-    },
-    {
-      'title': '✅ Kualitas Udara Sangat Baik',
-      'message':
-          'Semua parameter udara dalam kondisi optimal untuk kesehatan tanaman.',
-      'time': '10 menit lalu',
-      'type': 'success',
-      'icon': Icons.check_circle,
-      'priority': 'low',
-    },
-    //... tambahkan notifikasi lainnya jika ada
-  ];
-
-  DateTime _lastNotificationTime = DateTime.now().subtract(Duration(hours: 1));
+  final String _currentUserId = "kDMu3d3LpiXysVTxBkSLUz6qG0W2";
+  final String _currentDeviceId = "DEV-001";
 
   @override
   void initState() {
     super.initState();
+
     _animationController = AnimationController(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _pulseController = AnimationController(
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
 
-    // Simulate real-time data updates
-    _dataUpdateTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-      _updateSensorData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<MonitoringProvider>(context, listen: false)
+          .startListening(_currentUserId, _currentDeviceId);
     });
-  }
-
-  void _updateSensorData() {
-    setState(() {
-      final random = Random();
-      sensorData['temperature'] = 20 + random.nextDouble() * 10;
-      sensorData['humidity'] = 40 + random.nextDouble() * 40;
-      sensorData['soilMoisture'] = 30 + random.nextDouble() * 50;
-      sensorData['lightIntensity'] = 200 + random.nextDouble() * 800;
-      sensorData['airQuality'] = 70 + random.nextDouble() * 30;
-      sensorData['ph'] = 6.0 + random.nextDouble() * 2;
-      sensorData['co2Level'] = 380 + random.nextDouble() * 400;
-      sensorData['pm25'] = random.nextDouble() * 50;
-      sensorData['pm10'] = random.nextDouble() * 80;
-      sensorData['voc'] = random.nextDouble() * 40;
-      sensorData['oxygenLevel'] = 19.5 + random.nextDouble() * 2;
-    });
-
-    // Check air quality and generate notifications
-    _checkAirQualityAlerts();
-  }
-
-  void _checkAirQualityAlerts() {
-    // Critical PM2.5 levels
-    if (sensorData['pm25'] > 35) {
-      _addAirQualityNotification(
-        '🚨 BAHAYA! PM2.5 Sangat Tinggi',
-        'Level PM2.5: ${sensorData['pm25'].toStringAsFixed(1)} μg/m³. SEGERA gunakan air purifier dan tutup jendela!',
-        'critical',
-        Icons.dangerous,
-      );
-    }
-
-    // High CO2 levels
-    if (sensorData['co2Level'] > 1000) {
-      _addAirQualityNotification(
-        '⚠️ CO2 Berbahaya!',
-        'CO2: ${sensorData['co2Level'].toStringAsFixed(0)} ppm. Buka semua ventilasi SEKARANG!',
-        'critical',
-        Icons.warning,
-      );
-    }
-
-    // ... (sisa logika _checkAirQualityAlerts)
-  }
-
-  void _addAirQualityNotification(
-      String title, String message, String type, IconData icon) {
-    if (notifications.length > 0 &&
-        notifications[0]['title'] == title &&
-        DateTime.now().difference(_lastNotificationTime).inMinutes < 5) {
-      return; // Prevent spam notifications
-    }
-
-    setState(() {
-      notifications.insert(0, {
-        'title': title,
-        'message': message,
-        'time': 'Baru saja',
-        'type': type,
-        'icon': icon,
-        'priority': type == 'critical' ? 'high' : 'medium',
-      });
-
-      // Keep only last 10 notifications
-      if (notifications.length > 10) {
-        notifications = notifications.take(10).toList();
-      }
-    });
-
-    _lastNotificationTime = DateTime.now();
-
-    // Show popup for critical alerts
-    if (type == 'critical') {
-      _showCriticalAlert(title, message);
-    }
-  }
-
-  void _showCriticalAlert(String title, String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.red[50],
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Icon(Icons.emergency, color: Colors.red, size: 28),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'PERINGATAN KRITIS!',
-                  style: TextStyle(
-                      color: Colors.red[800], fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.red[700],
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                message,
-                style: TextStyle(color: Colors.grey[700]),
-              ),
-              // ... sisa content AlertDialog
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('MENGERTI',
-                  style: TextStyle(
-                      color: Colors.red[700], fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     _pulseController.dispose();
-    _dataUpdateTimer?.cancel();
     super.dispose();
   }
 
@@ -232,17 +62,32 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     });
   }
 
-  void _toggleVoice() {
+  void _toggleVoice(BuildContext context) {
     setState(() {
       _isVoiceActive = !_isVoiceActive;
     });
 
     if (_isVoiceActive) {
-      _showVoiceDialog();
+      final provider = Provider.of<MonitoringProvider>(context, listen: false);
+      _showVoiceDialog(provider);
     }
   }
 
-  void _showVoiceDialog() {
+  void _showVoiceDialog(MonitoringProvider provider) {
+    final sensorDataMap = {
+      'temperature': provider.latestHistory?.temperature ?? 0.0,
+      'humidity': provider.latestHistory?.humidity ?? 0.0,
+      'soilMoisture': 78.0,
+      'lightIntensity': 850.0,
+      'airQuality': provider.latestHistory?.airQuality ?? 0.0,
+      'ph': 6.8,
+      'co2Level': provider.latestHistory?.co2Level ?? 0.0,
+      'pm25': provider.latestHistory?.pm25 ?? 0.0,
+      'pm10': provider.latestHistory?.pm10 ?? 0.0,
+      'voc': provider.latestHistory?.ppmVOC ?? 0.0,
+      'oxygenLevel': provider.latestHistory?.oxygenLevel ?? 0.0,
+    };
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -252,47 +97,87 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               _isVoiceActive = false;
             });
           },
-          sensorData: sensorData,
+          sensorData: sensorDataMap,
         );
       },
     );
   }
 
+  bool _hasHighPriorityNotifications(List<UserNotification> notifications) {
+    return notifications.any((notification) =>
+        notification.severity.toLowerCase() == 'high' ||
+        notification.severity.toLowerCase() == 'critical');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF4DD0E1),
-              Color(0xFF26A69A),
-              Color(0xFF00695C),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(),
-              Expanded(
-                child: _buildBody(),
+    return Consumer<MonitoringProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Scaffold(
+            backgroundColor: Color(0xFFF0F8F7),
+            body: Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF00695C),
               ),
-            ],
+            ),
+          );
+        }
+
+        if (provider.latestHistory == null) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF0F8F7),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  "Tidak dapat memuat data sensor untuk perangkat $_currentDeviceId.\nPastikan perangkat mengirim data.",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Scaffold(
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF4DD0E1),
+                  Color(0xFF26A69A),
+                  Color(0xFF00695C),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildAppBar(),
+                  Expanded(
+                    child: _buildBody(provider),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-      floatingActionButton: _buildVoiceButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          bottomNavigationBar:
+              _buildBottomNavigationBar(provider.notifications),
+          floatingActionButton: _buildVoiceButton(),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+        );
+      },
     );
   }
 
   Widget _buildAppBar() {
+    // DIPERBAIKI: Menghapus 'const' dari widget parent karena child-nya tidak constant
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           Container(
@@ -305,18 +190,18 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
-                  offset: Offset(0, 5),
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
-            child: Icon(
+            child: const Icon(
               Icons.eco,
               color: Colors.white,
               size: 28,
             ),
           ),
-          SizedBox(width: 15),
-          Expanded(
+          const SizedBox(width: 15),
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -332,7 +217,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 Text(
                   'Smart Air Quality Monitor',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white70,
                     fontSize: 14,
                   ),
                 ),
@@ -345,15 +230,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
             ),
-            child: Icon(
+            child: const Icon(
               Icons.settings,
               color: Colors.white,
               size: 24,
@@ -364,12 +242,30 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(MonitoringProvider provider) {
+    Widget currentPage;
+    switch (_selectedIndex) {
+      case 0:
+        currentPage = MonitoringScreen(sensorData: provider.latestHistory!);
+        break;
+      case 1:
+        currentPage = NotificationScreen(notifications: provider.notifications);
+        break;
+      case 2:
+        currentPage = AirQualityScreen(sensorData: provider.latestHistory!);
+        break;
+      case 3:
+        currentPage = AnalyticsScreen(sensorData: provider.latestHistory!);
+        break;
+      default:
+        currentPage = MonitoringScreen(sensorData: provider.latestHistory!);
+    }
+
     return Container(
-      margin: EdgeInsets.only(top: 10),
+      margin: const EdgeInsets.only(top: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF0F8F7),
-        borderRadius: BorderRadius.only(
+        color: const Color(0xFFF0F8F7),
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(30),
           topRight: Radius.circular(30),
         ),
@@ -377,12 +273,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
-            offset: Offset(0, -5),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(30),
           topRight: Radius.circular(30),
         ),
@@ -391,115 +287,81 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           builder: (context, child) {
             return Transform.scale(
               scale: 1.0 - (_animationController.value * 0.05),
-              child: _getBodyContent(),
+              child: child,
             );
           },
+          child: currentPage,
         ),
       ),
     );
   }
 
-  Widget _getBodyContent() {
-    switch (_selectedIndex) {
-      case 0:
-        return MonitoringScreen(sensorData: sensorData);
-      case 1:
-        return NotificationScreen(notifications: notifications);
-      case 2:
-        return AirQualityScreen(sensorData: sensorData);
-      case 3:
-        return AnalyticsScreen(sensorData: sensorData);
-      default:
-        return MonitoringScreen(sensorData: sensorData);
-    }
-  }
-
-  bool _hasHighPriorityNotifications() {
-    return notifications.any((notification) =>
-        notification['priority'] == 'high' ||
-        notification['type'] == 'critical');
-  }
-
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar(List<UserNotification> notifications) {
+    final hasHighPriority = _hasHighPriorityNotifications(notifications);
     return Container(
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
-            offset: Offset(0, -5),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(25),
           topRight: Radius.circular(25),
         ),
         child: BottomNavigationBar(
           items: [
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_outlined),
               activeIcon: Icon(Icons.dashboard),
               label: 'Monitoring',
             ),
             BottomNavigationBarItem(
               icon: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Icon(Icons.notifications_outlined),
-                  if (_hasHighPriorityNotifications())
+                  const Icon(Icons.notifications_outlined),
+                  if (hasHighPriority)
                     Positioned(
-                      right: 0,
-                      top: 0,
+                      right: -2,
+                      top: -2,
                       child: Container(
-                        width: 8,
-                        height: 8,
+                        width: 10,
+                        height: 10,
                         decoration: BoxDecoration(
                           color: Colors.red,
-                          borderRadius: BorderRadius.circular(4),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
                         ),
                       ),
                     ),
                 ],
               ),
-              activeIcon: Stack(
-                children: [
-                  Icon(Icons.notifications),
-                  if (_hasHighPriorityNotifications())
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              activeIcon: const Icon(Icons.notifications),
               label: 'Notifikasi',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.air_outlined),
               activeIcon: Icon(Icons.air),
               label: 'Kualitas Udara',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.analytics_outlined),
               activeIcon: Icon(Icons.analytics),
               label: 'Analitik',
             ),
           ],
           currentIndex: _selectedIndex,
-          selectedItemColor: Color(0xFF00695C),
+          selectedItemColor: const Color(0xFF00695C),
           unselectedItemColor: Colors.grey[600],
           backgroundColor: Colors.white,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
-          selectedLabelStyle: TextStyle(fontWeight: FontWeight.w600),
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
           onTap: _onItemTapped,
         ),
       ),
@@ -517,24 +379,28 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Color(0xFF4DD0E1).withOpacity(0.3),
-                blurRadius: 20 + (10 * _pulseController.value),
-                spreadRadius: _isVoiceActive ? 5 : 0,
+                color: const Color(0xFF4DD0E1).withOpacity(0.3),
+                blurRadius: 10 + (10 * _pulseController.value),
+                spreadRadius: 5 + (5 * _pulseController.value),
               ),
             ],
           ),
           child: FloatingActionButton(
-            onPressed: _toggleVoice,
-            backgroundColor:
-                _isVoiceActive ? Color(0xFF00BCD4) : Color(0xFF4DD0E1),
+            onPressed: () => _toggleVoice(context),
+            backgroundColor: _isVoiceActive
+                ? const Color(0xFF00BCD4)
+                : const Color(0xFF4DD0E1),
             elevation: 8,
             child: AnimatedSwitcher(
-              duration: Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return ScaleTransition(scale: animation, child: child);
+              },
               child: Icon(
                 _isVoiceActive ? Icons.mic : Icons.mic_none,
-                key: ValueKey(_isVoiceActive),
+                key: ValueKey<bool>(_isVoiceActive),
                 color: Colors.white,
-                size: 30,
+                size: 32,
               ),
             ),
           ),

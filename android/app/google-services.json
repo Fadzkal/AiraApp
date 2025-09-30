@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1069296455146",
+    "firebase_url": "https://aira-web-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "aira-web-app",
+    "storage_bucket": "aira-web-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069296455146:android:67bd9b325cfa7567c37693",
+        "android_client_info": {
+          "package_name": "com.example.studi_kasus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1069296455146-sqj917d7inq654d7pbsbm8fm9v28q9jq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABhnI4OHwmbBeXnvuwf1M3ZY0OqBF9rLc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069296455146-sqj917d7inq654d7pbsbm8fm9v28q9jq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
