@@ -44,17 +44,9 @@ class MonitoringScreen extends StatelessWidget {
   }
 
   Widget _buildStatusCards() {
+    // Hanya menampilkan kartu Kualitas Udara
     return Row(
       children: [
-        Expanded(
-          child: _buildStatusCard(
-            'Tanaman Sehat',
-            '92%', // Placeholder
-            Icons.eco,
-            const Color(0xFF4CAF50),
-          ),
-        ),
-        const SizedBox(width: 15),
         Expanded(
           child: _buildStatusCard(
             'Kualitas Udara',
@@ -139,35 +131,6 @@ class MonitoringScreen extends StatelessWidget {
           Icons.water_drop,
           const Color(0xFF2196F3),
           _getHumidityStatus(sensorData.humidity),
-        ),
-        // Placeholder untuk data yang mungkin belum ada di model SensorHistory
-        _buildSensorCard(
-          'Kelembaban Tanah',
-          '78%',
-          Icons.grass,
-          const Color(0xFF4CAF50),
-          _getSoilMoistureStatus(78.0),
-        ),
-        _buildSensorCard(
-          'Intensitas Cahaya',
-          '850 lux',
-          Icons.wb_sunny,
-          const Color(0xFFFFC107),
-          _getLightStatus(850.0),
-        ),
-        _buildSensorCard(
-          'Kualitas Udara',
-          '${sensorData.airQuality}',
-          Icons.air,
-          const Color(0xFF00BCD4),
-          _getAirQualityStatus(sensorData.airQuality.toDouble()),
-        ),
-        _buildSensorCard(
-          'PPM (VOC)',
-          '${sensorData.ppmVOC} ppm',
-          Icons.science,
-          const Color(0xFF9C27B0),
-          _getVOCStatus(sensorData.ppmVOC.toDouble()),
         ),
       ],
     );
@@ -288,34 +251,10 @@ class MonitoringScreen extends StatelessWidget {
     return 'Optimal';
   }
 
-  String _getVOCStatus(double voc) {
-    if (voc > 30) return 'Tinggi';
-    if (voc > 20) return 'Sedang';
-    return 'Rendah';
-  }
-
   String _getHumidityStatus(double humidity) {
     if (humidity < 40) return 'Kering';
     if (humidity > 70) return 'Lembab';
     return 'Ideal';
-  }
-
-  String _getSoilMoistureStatus(double moisture) {
-    if (moisture < 30) return 'Kering';
-    if (moisture > 80) return 'Basah';
-    return 'Baik';
-  }
-
-  String _getLightStatus(double light) {
-    if (light < 200) return 'Gelap';
-    if (light > 800) return 'Terang';
-    return 'Cukup';
-  }
-
-  String _getAirQualityStatus(double quality) {
-    if (quality < 50) return 'Buruk';
-    if (quality < 80) return 'Sedang';
-    return 'Baik';
   }
 
   Color _getStatusColor(String status) {

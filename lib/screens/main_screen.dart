@@ -9,6 +9,7 @@ import 'monitoring_screen.dart';
 import 'notification_screen.dart';
 import 'air_quality_screen.dart';
 import 'analytics_screen.dart';
+import 'community_screen.dart'; // Ditambahkan
 import '../widgets/voice_assistant_dialog.dart';
 
 class MainScreen extends StatefulWidget {
@@ -168,14 +169,13 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               _buildBottomNavigationBar(provider.notifications),
           floatingActionButton: _buildVoiceButton(),
           floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
+              FloatingActionButtonLocation.centerFloat, // Diubah
         );
       },
     );
   }
 
   Widget _buildAppBar() {
-    // DIPERBAIKI: Menghapus 'const' dari widget parent karena child-nya tidak constant
     return Container(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -183,8 +183,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           Container(
             width: 50,
             height: 50,
+            padding: const EdgeInsets.all(
+                8), // Padding agar gambar tidak terlalu mepet
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color:
+                  Colors.white.withOpacity(0.2), // Warna latar bisa disesuaikan
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
@@ -194,11 +197,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.eco,
-              color: Colors.white,
-              size: 28,
+            // === PERUBAHAN DI SINI ===
+            child: Image.asset(
+              'assets/images/ICON AIRA.png', // Path ke gambar logo Anda
+              fit: BoxFit.contain, // Memastikan gambar pas di dalam container
             ),
+            // === AKHIR PERUBAHAN ===
           ),
           const SizedBox(width: 15),
           const Expanded(
@@ -256,6 +260,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         break;
       case 3:
         currentPage = AnalyticsScreen(sensorData: provider.latestHistory!);
+        break;
+      case 4: // Ditambahkan
+        currentPage = const CommunityScreen();
         break;
       default:
         currentPage = MonitoringScreen(sensorData: provider.latestHistory!);
@@ -353,6 +360,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               icon: Icon(Icons.analytics_outlined),
               activeIcon: Icon(Icons.analytics),
               label: 'Analitik',
+            ),
+            const BottomNavigationBarItem(
+              // Ditambahkan
+              icon: Icon(Icons.people_outline),
+              activeIcon: Icon(Icons.people),
+              label: 'Komunitas',
             ),
           ],
           currentIndex: _selectedIndex,

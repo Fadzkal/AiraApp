@@ -41,32 +41,29 @@ class AnalyticsScreen extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 15,
       mainAxisSpacing: 15,
-      childAspectRatio: 1.3,
+      childAspectRatio:
+          1.1, // Diubah dari 1.3 untuk memberi lebih banyak tinggi
       children: [
+        // Kartu untuk Suhu
         _buildAnalyticsCard(
-          'Data Saat Ini',
-          // DIPERBARUI: Menampilkan data live
-          'Suhu: ${sensorData.temperature.toStringAsFixed(1)}°C\nLembab: ${sensorData.humidity.toStringAsFixed(0)}%',
-          Icons.trending_up,
-          const Color(0xFF4CAF50),
+          'Suhu Udara',
+          '${sensorData.temperature.toStringAsFixed(1)}°C',
+          Icons.thermostat,
+          const Color(0xFFFF5722),
         ),
+        // Kartu untuk Kelembapan Udara
         _buildAnalyticsCard(
-          'Konsumsi Air',
-          '2.3L hari ini\n↑12% dari kemarin',
+          'Kelembapan Udara',
+          '${sensorData.humidity.toStringAsFixed(0)}%',
           Icons.water_drop,
           const Color(0xFF2196F3),
         ),
+        // Kartu untuk Kualitas Udara
         _buildAnalyticsCard(
-          'Efisiensi Energi',
-          '89% efisien\nHemat 15%',
-          Icons.battery_charging_full,
-          const Color(0xFFFFC107),
-        ),
-        _buildAnalyticsCard(
-          'Prediksi Panen',
-          '23 hari lagi\nKondisi optimal',
-          Icons.eco,
-          const Color(0xFF9C27B0),
+          'Kualitas Udara',
+          '${sensorData.airQuality}',
+          Icons.air,
+          const Color(0xFF00BCD4),
         ),
       ],
     );
@@ -89,6 +86,7 @@ class AnalyticsScreen extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 40,
@@ -99,7 +97,7 @@ class AnalyticsScreen extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             title,
             style: const TextStyle(
@@ -109,12 +107,13 @@ class AnalyticsScreen extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             content,
             style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
             textAlign: TextAlign.center,
           ),
